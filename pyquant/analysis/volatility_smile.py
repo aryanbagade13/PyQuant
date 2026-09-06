@@ -65,6 +65,9 @@ def _is_valid_row(
     if row.mid_price <= 0:
         return False
 
+    if row.spread is None:
+        return True
+
     relative_spread = row.spread / row.mid_price
 
     return (

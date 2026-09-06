@@ -108,15 +108,6 @@ def black_scholes_price(
         dividend_yield=dividend_yield,
     )
 
-    d1 = calculate_d1(
-        spot=spot,
-        strike=strike,
-        time_to_expiry=time_to_expiry_value,
-        risk_free_rate=risk_free_rate,
-        volatility=volatility,
-        dividend_yield=dividend_yield,
-    )
-
     d2 = calculate_d2(
         d1=d1,
         volatility=volatility,

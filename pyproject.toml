@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyquant"
+version = "0.1.0"
+description = "Options analytics and earnings-event volatility research toolkit"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "alpaca-py>=0.40",
+    "certifi>=2024.2.2",
+    "curl-cffi>=0.15",
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "python-dotenv>=1.0",
+    "scipy>=1.11",
+    "streamlit>=1.32",
+    "yfinance>=0.2",
+]
+
+[project.scripts]
+pyquant-earnings = "pyquant.cli.earnings_dataset:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["pyquant*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

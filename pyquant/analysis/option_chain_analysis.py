@@ -14,7 +14,7 @@ class OptionAnalysisRow:
     bid: float
     ask: float
     mid_price: float
-    spread: float
+    spread: float|None
     moneyness: float
     implied_volatility: float
     delta: float
@@ -101,7 +101,7 @@ def analyse_option_quote(
         bid=quote.bid,
         ask=quote.ask,
         mid_price=quote.mid_price,
-        spread=quote.ask - quote.bid,
+        spread=quote.spread,
         moneyness=option.strike / market.spot,
         implied_volatility=calculated_iv,
         delta=delta(option, calibrated_market),
@@ -121,7 +121,12 @@ def analyse_option_chain(
     rows: list[OptionAnalysisRow] = []
 
     for quote in quotes:
-        if quote.bid <= 0 or quote.ask <= 0:
+        try:
+            market_price = quote.mid_price
+        except ValueError:
+            continue
+
+        if market_price <= 0.0:
             continue
 
         try:
@@ -130,10 +135,10 @@ def analyse_option_chain(
                 market=market,
             )
         except (
-            ValueError,
-            ZeroDivisionError,
-            RuntimeError,
-            OverflowError,
+                ValueError,
+                ZeroDivisionError,
+                RuntimeError,
+                OverflowError,
         ):
             continue
 
