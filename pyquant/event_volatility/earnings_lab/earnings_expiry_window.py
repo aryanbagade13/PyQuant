@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
@@ -16,8 +17,7 @@ class ExpiryProvider(Protocol):
     def get_expiries(
         self,
         symbol: str,
-    ) -> list[date]:
-        ...
+    ) -> list[date]: ...
 
 
 @dataclass(frozen=True)
@@ -41,9 +41,7 @@ class EarningsExpiryWindow:
 
     def __post_init__(self) -> None:
         if self.short_expiry >= self.long_expiry:
-            raise ValueError(
-                "Short expiry must be before long expiry."
-            )
+            raise ValueError("Short expiry must be before long expiry.")
 
     @classmethod
     def from_provider(
@@ -68,12 +66,30 @@ class EarningsExpiryWindow:
         because their treatment requires more precise timing data.
         """
 
+        normalised_symbol = symbol.strip().upper()
+        if not normalised_symbol:
+            raise ValueError("Symbol cannot be empty.")
+
+        return cls.from_expiries(
+            expiries=provider.get_expiries(normalised_symbol),
+            symbol=normalised_symbol,
+            earnings_date=earnings_date,
+            release_timing=release_timing,
+        )
+
+    @classmethod
+    def from_expiries(
+        cls,
+        expiries: Iterable[date],
+        symbol: str,
+        earnings_date: date,
+        release_timing: EarningsReleaseTiming,
+    ) -> "EarningsExpiryWindow":
+        """Construct an earnings window from known contract expiries."""
         symbol = symbol.strip().upper()
 
         if not symbol:
-            raise ValueError(
-                "Symbol cannot be empty."
-            )
+            raise ValueError("Symbol cannot be empty.")
 
         if release_timing == EarningsReleaseTiming.UNKNOWN:
             raise ValueError(
@@ -81,61 +97,31 @@ class EarningsExpiryWindow:
                 "release timing is unknown."
             )
 
-        if (
-            release_timing
-            == EarningsReleaseTiming.DURING_MARKET_HOURS
-        ):
+        if release_timing == EarningsReleaseTiming.DURING_MARKET_HOURS:
             raise ValueError(
                 "During-market-hours earnings require a precise "
                 "announcement timestamp and are excluded for now."
             )
 
-        expiries = sorted(
-            set(provider.get_expiries(symbol))
-        )
+        expiries = sorted(set(expiries))
 
         if not expiries:
-            raise ValueError(
-                f"No option expiries found for {symbol}."
-            )
+            raise ValueError(f"No option expiries found for {symbol}.")
 
-        if (
-            release_timing
-            == EarningsReleaseTiming.AFTER_MARKET_CLOSE
-        ):
+        if release_timing == EarningsReleaseTiming.AFTER_MARKET_CLOSE:
             short_candidates = [
-                expiry
-                for expiry in expiries
-                if expiry <= earnings_date
+                expiry for expiry in expiries if expiry <= earnings_date
             ]
 
-            long_candidates = [
-                expiry
-                for expiry in expiries
-                if expiry > earnings_date
-            ]
+            long_candidates = [expiry for expiry in expiries if expiry > earnings_date]
 
-        elif (
-            release_timing
-            == EarningsReleaseTiming.BEFORE_MARKET_OPEN
-        ):
-            short_candidates = [
-                expiry
-                for expiry in expiries
-                if expiry < earnings_date
-            ]
+        elif release_timing == EarningsReleaseTiming.BEFORE_MARKET_OPEN:
+            short_candidates = [expiry for expiry in expiries if expiry < earnings_date]
 
-            long_candidates = [
-                expiry
-                for expiry in expiries
-                if expiry >= earnings_date
-            ]
+            long_candidates = [expiry for expiry in expiries if expiry >= earnings_date]
 
         else:
-            raise ValueError(
-                f"Unsupported earnings release timing: "
-                f"{release_timing}"
-            )
+            raise ValueError(f"Unsupported earnings release timing: {release_timing}")
 
         if not short_candidates:
             raise ValueError(
