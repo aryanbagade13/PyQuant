@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from scipy.interpolate import interp1d
 
 from pyquant.analysis.option_chain_analysis import analyse_option_chain
+from pyquant.analysis.volatility_surface import build_volatility_surface
 from pyquant.data.alpaca_provider import AlpacaProvider
 from pyquant.market.market_state import MarketState
-from pyquant.analysis.volatility_surface import build_volatility_surface
 from pyquant.visualisation.volatility_surface_3d import plot_volatility_surface
 
 # ---------------------------------------------------------------------
@@ -79,6 +78,7 @@ st.markdown(
 # Provider and cached data
 # ---------------------------------------------------------------------
 
+
 @st.cache_resource
 def get_provider() -> AlpacaProvider:
     return AlpacaProvider()
@@ -102,10 +102,10 @@ def load_snapshot(symbol: str, expiry: date):
     show_spinner=False,
 )
 def load_option_analysis(
-        symbol: str,
-        expiry: date,
-        risk_free_rate: float,
-        dividend_yield: float,
+    symbol: str,
+    expiry: date,
+    risk_free_rate: float,
+    dividend_yield: float,
 ):
     snapshot = load_snapshot(
         symbol=symbol,
@@ -127,9 +127,9 @@ def load_option_analysis(
 
 
 def create_market_state(
-        spot: float,
-        risk_free_rate: float,
-        dividend_yield: float,
+    spot: float,
+    risk_free_rate: float,
+    dividend_yield: float,
 ) -> MarketState:
     return MarketState(
         spot=spot,
@@ -144,10 +144,11 @@ def create_market_state(
 # General utility functions
 # ---------------------------------------------------------------------
 
+
 def get_first_attribute(
-        obj: object | None,
-        names: list[str],
-        default: Any = None,
+    obj: object | None,
+    names: list[str],
+    default: Any = None,
 ) -> Any:
     if obj is None:
         return default
@@ -195,6 +196,7 @@ def safe_float(value: object) -> float | None:
 # ---------------------------------------------------------------------
 # Dataframe construction
 # ---------------------------------------------------------------------
+
 
 def build_quote_dataframe(snapshot) -> pd.DataFrame:
     columns = [
@@ -249,26 +251,14 @@ def build_quote_dataframe(snapshot) -> pd.DataFrame:
 
         rows.append(
             {
-                "Type": normalise_option_type(
-                    quote.option.option_type
-                ),
-                "Strike": safe_float(
-                    quote.option.strike
-                ),
+                "Type": normalise_option_type(quote.option.option_type),
+                "Strike": safe_float(quote.option.strike),
                 "Bid": bid,
                 "Ask": ask,
                 "Mid": mid,
-                "Spread": (
-                    ask - bid
-                    if has_live_market
-                    else None
-                ),
+                "Spread": (ask - bid if has_live_market else None),
                 "Last": last,
-                "Price Source": (
-                    "Midpoint"
-                    if has_live_market
-                    else "Last trade"
-                ),
+                "Price Source": ("Midpoint" if has_live_market else "Last trade"),
                 "Last Trade": get_first_attribute(
                     quote,
                     ["last_trade_time"],
@@ -295,7 +285,7 @@ def build_quote_dataframe(snapshot) -> pd.DataFrame:
 
 
 def build_analysis_dataframe(
-        analysis,
+    analysis,
 ) -> pd.DataFrame:
     columns = [
         "Type",
@@ -410,11 +400,7 @@ def build_analysis_dataframe(
         bid_number = safe_float(bid)
         ask_number = safe_float(ask)
 
-        if (
-                spread is None
-                and bid_number is not None
-                and ask_number is not None
-        ):
+        if spread is None and bid_number is not None and ask_number is not None:
             spread = ask_number - bid_number
 
         delta = get_first_attribute(
@@ -475,9 +461,7 @@ def build_analysis_dataframe(
 
         rows.append(
             {
-                "Type": normalise_option_type(
-                    option_type
-                ),
+                "Type": normalise_option_type(option_type),
                 "Strike": strike,
                 "Bid": bid,
                 "Ask": ask,
@@ -549,23 +533,20 @@ def build_analysis_dataframe(
 # Option-chain filtering
 # ---------------------------------------------------------------------
 
+
 def apply_chain_filters(
-        dataframe: pd.DataFrame,
-        option_type: str,
-        minimum_strike: float,
-        maximum_strike: float,
+    dataframe: pd.DataFrame,
+    option_type: str,
+    minimum_strike: float,
+    maximum_strike: float,
 ) -> pd.DataFrame:
     filtered = dataframe.copy()
 
     if option_type == "Calls":
-        filtered = filtered[
-            filtered["Type"] == "call"
-            ]
+        filtered = filtered[filtered["Type"] == "call"]
 
     elif option_type == "Puts":
-        filtered = filtered[
-            filtered["Type"] == "put"
-            ]
+        filtered = filtered[filtered["Type"] == "put"]
 
     filtered = filtered[
         filtered["Strike"].between(
@@ -581,9 +562,10 @@ def apply_chain_filters(
 # IV smile
 # ---------------------------------------------------------------------
 
+
 def plot_iv_smile(
-        dataframe: pd.DataFrame,
-        spot: float,
+    dataframe: pd.DataFrame,
+    spot: float,
 ) -> plt.Figure | None:
     required_columns = {
         "Type",
@@ -597,16 +579,9 @@ def plot_iv_smile(
     if spot <= 0:
         return None
 
-    chart_data = dataframe[
-        ["Type", "Strike", "IV"]
-    ].copy()
+    chart_data = dataframe[["Type", "Strike", "IV"]].copy()
 
-    chart_data["Type"] = (
-        chart_data["Type"]
-        .astype(str)
-        .str.lower()
-        .str.strip()
-    )
+    chart_data["Type"] = chart_data["Type"].astype(str).str.lower().str.strip()
 
     chart_data["Strike"] = pd.to_numeric(
         chart_data["Strike"],
@@ -632,15 +607,12 @@ def plot_iv_smile(
             0.01,
             3.00,
         )
-        ].copy()
+    ].copy()
 
     if chart_data.empty:
         return None
 
-    chart_data["Moneyness"] = (
-            chart_data["Strike"]
-            / float(spot)
-    )
+    chart_data["Moneyness"] = chart_data["Strike"] / float(spot)
 
     chart_data = chart_data[
         chart_data["Moneyness"].between(
@@ -652,9 +624,7 @@ def plot_iv_smile(
     if chart_data.empty:
         return None
 
-    figure, axis = plt.subplots(
-        figsize=(10, 5)
-    )
+    figure, axis = plt.subplots(figsize=(10, 5))
 
     plotted_anything = False
 
@@ -662,9 +632,7 @@ def plot_iv_smile(
         "call",
         "put",
     ]:
-        group = chart_data[
-            chart_data["Type"] == option_type
-            ].copy()
+        group = chart_data[chart_data["Type"] == option_type].copy()
 
         group = (
             group.groupby(
@@ -678,26 +646,16 @@ def plot_iv_smile(
         if group.empty:
             continue
 
-        moneyness = group[
-            "Moneyness"
-        ].to_numpy(
-            dtype=float
-        )
+        moneyness = group["Moneyness"].to_numpy(dtype=float)
 
-        implied_volatility = group[
-            "IV"
-        ].to_numpy(
-            dtype=float
-        )
+        implied_volatility = group["IV"].to_numpy(dtype=float)
 
         axis.scatter(
             moneyness,
             implied_volatility * 100,
             s=24,
             alpha=0.55,
-            label=(
-                f"{option_type.title()} observations"
-            ),
+            label=(f"{option_type.title()} observations"),
         )
 
         # A quadratic fit needs at least three distinct points.
@@ -729,9 +687,7 @@ def plot_iv_smile(
                 fitted_moneyness,
                 fitted_iv * 100,
                 linewidth=2,
-                label=(
-                    f"{option_type.title()} quadratic fit"
-                ),
+                label=(f"{option_type.title()} quadratic fit"),
             )
 
         plotted_anything = True
@@ -747,21 +703,13 @@ def plot_iv_smile(
         label="At the money",
     )
 
-    axis.set_title(
-        "Implied Volatility Smile"
-    )
+    axis.set_title("Implied Volatility Smile")
 
-    axis.set_xlabel(
-        "Moneyness — Strike / Spot"
-    )
+    axis.set_xlabel("Moneyness — Strike / Spot")
 
-    axis.set_ylabel(
-        "Implied Volatility (%)"
-    )
+    axis.set_ylabel("Implied Volatility (%)")
 
-    axis.grid(
-        alpha=0.25
-    )
+    axis.grid(alpha=0.25)
 
     axis.legend()
 
@@ -784,10 +732,7 @@ with st.sidebar:
                 "selected_symbol",
                 "AAPL",
             ),
-            help=(
-                "Enter a US equity ticker such as "
-                "AAPL or NVDA."
-            ),
+            help=("Enter a US equity ticker such as AAPL or NVDA."),
         )
 
         risk_free_rate = st.number_input(
@@ -830,38 +775,22 @@ with st.sidebar:
         if not symbol:
             st.error("Enter a ticker.")
         else:
-            with st.spinner(
-                    f"Loading {symbol} expiries..."
-            ):
+            with st.spinner(f"Loading {symbol} expiries..."):
                 try:
-                    expiries = load_expiries(
-                        symbol
-                    )
+                    expiries = load_expiries(symbol)
 
                     if not expiries:
-                        raise ValueError(
-                            "No option expiries were returned."
-                        )
+                        raise ValueError("No option expiries were returned.")
 
-                    st.session_state[
-                        "selected_symbol"
-                    ] = symbol
+                    st.session_state["selected_symbol"] = symbol
 
-                    st.session_state[
-                        "risk_free_rate"
-                    ] = risk_free_rate
+                    st.session_state["risk_free_rate"] = risk_free_rate
 
-                    st.session_state[
-                        "dividend_yield"
-                    ] = dividend_yield
+                    st.session_state["dividend_yield"] = dividend_yield
 
-                    st.session_state[
-                        "expiries"
-                    ] = expiries
+                    st.session_state["expiries"] = expiries
 
-                    st.session_state[
-                        "selected_expiry"
-                    ] = expiries[0]
+                    st.session_state["selected_expiry"] = expiries[0]
 
                     st.session_state.pop(
                         "snapshot",
@@ -883,19 +812,12 @@ with st.sidebar:
                         None,
                     )
 
-                    st.success(
-                        f"Loaded {len(expiries)} expiries "
-                        f"for {symbol}."
-                    )
+                    st.success(f"Loaded {len(expiries)} expiries for {symbol}.")
 
                 except Exception as error:
-                    st.error(
-                        f"Could not load {symbol}: {error}"
-                    )
+                    st.error(f"Could not load {symbol}: {error}")
 
-    symbol = st.session_state.get(
-        "selected_symbol"
-    )
+    symbol = st.session_state.get("selected_symbol")
 
     expiries = st.session_state.get(
         "expiries",
@@ -909,9 +831,7 @@ with st.sidebar:
         )
 
         try:
-            expiry_index = expiries.index(
-                stored_expiry
-            )
+            expiry_index = expiries.index(stored_expiry)
         except ValueError:
             expiry_index = 0
 
@@ -919,9 +839,7 @@ with st.sidebar:
             "Expiry",
             options=expiries,
             index=expiry_index,
-            format_func=lambda expiry: expiry.strftime(
-                "%d %b %Y"
-            ),
+            format_func=lambda expiry: expiry.strftime("%d %b %Y"),
         )
 
         refresh_snapshot = st.button(
@@ -931,9 +849,7 @@ with st.sidebar:
         )
 
         if refresh_snapshot:
-            with st.spinner(
-                    f"Downloading {symbol} option chain..."
-            ):
+            with st.spinner(f"Downloading {symbol} option chain..."):
                 try:
                     snapshot = load_snapshot(
                         symbol=symbol,
@@ -963,27 +879,18 @@ with st.sidebar:
                         market=market,
                     )
 
-                    st.session_state[
-                        "snapshot"
-                    ] = snapshot
+                    st.session_state["snapshot"] = snapshot
 
-                    st.session_state[
-                        "analysis"
-                    ] = analysis
+                    st.session_state["analysis"] = analysis
 
-                    st.session_state[
-                        "selected_expiry"
-                    ] = selected_expiry
+                    st.session_state["selected_expiry"] = selected_expiry
 
                 except Exception as error:
-                    st.error(
-                        "Could not load option chain: "
-                        f"{error}"
-                    )
+                    st.error(f"Could not load option chain: {error}")
 
         if st.button(
-                "Clear cached market data",
-                width="stretch",
+            "Clear cached market data",
+            width="stretch",
         ):
             st.cache_data.clear()
 
@@ -1016,13 +923,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-snapshot = st.session_state.get(
-    "snapshot"
-)
+snapshot = st.session_state.get("snapshot")
 
-analysis = st.session_state.get(
-    "analysis"
-)
+analysis = st.session_state.get("analysis")
 
 if snapshot is None or analysis is None:
     st.info(
@@ -1032,27 +935,19 @@ if snapshot is None or analysis is None:
 
     st.markdown("### Dashboard modules")
 
-    module_1, module_2, module_3 = st.columns(
-        3
-    )
+    module_1, module_2, module_3 = st.columns(3)
 
     with module_1:
         st.markdown("#### Market snapshot")
-        st.write(
-            "Spot data and option-chain quote quality."
-        )
+        st.write("Spot data and option-chain quote quality.")
 
     with module_2:
         st.markdown("#### Options analytics")
-        st.write(
-            "Implied volatility, Greeks and model prices."
-        )
+        st.write("Implied volatility, Greeks and model prices.")
 
     with module_3:
         st.markdown("#### Volatility modelling")
-        st.write(
-            "Smile and multi-expiry surface visualisation."
-        )
+        st.write("Smile and multi-expiry surface visualisation.")
 
     st.stop()
 
@@ -1060,13 +955,9 @@ if snapshot is None or analysis is None:
 # Prepare current data
 # ---------------------------------------------------------------------
 
-quote_dataframe = build_quote_dataframe(
-    snapshot
-)
+quote_dataframe = build_quote_dataframe(snapshot)
 
-analysis_dataframe = build_analysis_dataframe(
-    analysis
-)
+analysis_dataframe = build_analysis_dataframe(analysis)
 
 if quote_dataframe.empty:
     live_quotes = quote_dataframe.copy()
@@ -1074,40 +965,23 @@ if quote_dataframe.empty:
     calls = quote_dataframe.copy()
     puts = quote_dataframe.copy()
 else:
-    live_quotes = quote_dataframe[
-        quote_dataframe["Price Source"]
-        == "Midpoint"
-        ]
+    live_quotes = quote_dataframe[quote_dataframe["Price Source"] == "Midpoint"]
 
-    fallback_quotes = quote_dataframe[
-        quote_dataframe["Price Source"]
-        == "Last trade"
-        ]
+    fallback_quotes = quote_dataframe[quote_dataframe["Price Source"] == "Last trade"]
 
-    calls = quote_dataframe[
-        quote_dataframe["Type"] == "call"
-        ]
+    calls = quote_dataframe[quote_dataframe["Type"] == "call"]
 
-    puts = quote_dataframe[
-        quote_dataframe["Type"] == "put"
-        ]
+    puts = quote_dataframe[quote_dataframe["Type"] == "put"]
 
-selected_expiry = st.session_state.get(
-    "selected_expiry"
-)
+selected_expiry = st.session_state.get("selected_expiry")
 
 # ---------------------------------------------------------------------
 # Header metrics
 # ---------------------------------------------------------------------
 
-st.markdown(
-    f"### {snapshot.symbol} · "
-    f"{selected_expiry:%d %B %Y}"
-)
+st.markdown(f"### {snapshot.symbol} · {selected_expiry:%d %B %Y}")
 
-metric_1, metric_2, metric_3, metric_4, metric_5 = (
-    st.columns(5)
-)
+metric_1, metric_2, metric_3, metric_4, metric_5 = st.columns(5)
 
 metric_1.metric(
     "Spot",
@@ -1134,9 +1008,7 @@ metric_5.metric(
     f"{len(live_quotes):,}",
 )
 
-st.caption(
-    f"Snapshot captured at {snapshot.timestamp}"
-)
+st.caption(f"Snapshot captured at {snapshot.timestamp}")
 
 # ---------------------------------------------------------------------
 # Tabs
@@ -1163,39 +1035,24 @@ st.caption(
 # ---------------------------------------------------------------------
 
 with overview_tab:
-    left, right = st.columns(
-        [1.25, 1]
-    )
+    left, right = st.columns([1.25, 1])
 
     with left:
-        st.subheader(
-            "At-the-money contracts"
-        )
+        st.subheader("At-the-money contracts")
 
         if analysis_dataframe.empty:
-            st.warning(
-                "No options were successfully analysed."
-            )
+            st.warning("No options were successfully analysed.")
 
-        elif analysis_dataframe[
-            "Strike"
-        ].dropna().empty:
-            st.warning(
-                "The analysis did not produce valid strikes."
-            )
+        elif analysis_dataframe["Strike"].dropna().empty:
+            st.warning("The analysis did not produce valid strikes.")
 
         else:
             atm = analysis_dataframe.copy()
 
-            atm["Distance"] = (
-                    atm["Strike"]
-                    - float(snapshot.spot)
-            ).abs()
+            atm["Distance"] = (atm["Strike"] - float(snapshot.spot)).abs()
 
             atm = (
-                atm.sort_values(
-                    "Distance"
-                )
+                atm.sort_values("Distance")
                 .groupby(
                     "Type",
                     as_index=False,
@@ -1223,65 +1080,27 @@ with overview_tab:
                 hide_index=True,
                 width="stretch",
                 column_config={
-                    "Strike": (
-                        st.column_config.NumberColumn(
-                            format="$%.2f"
-                        )
-                    ),
-                    "Mid": (
-                        st.column_config.NumberColumn(
-                            format="$%.2f"
-                        )
-                    ),
-                    "IV": (
-                        st.column_config.NumberColumn(
-                            format="%.4f"
-                        )
-                    ),
-                    "Delta": (
-                        st.column_config.NumberColumn(
-                            format="%.4f"
-                        )
-                    ),
-                    "Gamma": (
-                        st.column_config.NumberColumn(
-                            format="%.6f"
-                        )
-                    ),
-                    "Vega": (
-                        st.column_config.NumberColumn(
-                            format="%.4f"
-                        )
-                    ),
-                    "Theta": (
-                        st.column_config.NumberColumn(
-                            format="%.4f"
-                        )
-                    ),
+                    "Strike": (st.column_config.NumberColumn(format="$%.2f")),
+                    "Mid": (st.column_config.NumberColumn(format="$%.2f")),
+                    "IV": (st.column_config.NumberColumn(format="%.4f")),
+                    "Delta": (st.column_config.NumberColumn(format="%.4f")),
+                    "Gamma": (st.column_config.NumberColumn(format="%.6f")),
+                    "Vega": (st.column_config.NumberColumn(format="%.4f")),
+                    "Theta": (st.column_config.NumberColumn(format="%.4f")),
                 },
             )
 
     with right:
         st.subheader("Quote quality")
 
-        quote_count = len(
-            quote_dataframe
-        )
+        quote_count = len(quote_dataframe)
 
         midpoint_percentage = (
-            len(live_quotes)
-            / quote_count
-            * 100
-            if quote_count > 0
-            else 0
+            len(live_quotes) / quote_count * 100 if quote_count > 0 else 0
         )
 
         fallback_percentage = (
-            len(fallback_quotes)
-            / quote_count
-            * 100
-            if quote_count > 0
-            else 0
+            len(fallback_quotes) / quote_count * 100 if quote_count > 0 else 0
         )
 
         st.metric(
@@ -1300,9 +1119,7 @@ with overview_tab:
                 "last-trade prices. IV estimates may be stale."
             )
         else:
-            st.success(
-                "Most contracts have positive bid and ask quotes."
-            )
+            st.success("Most contracts have positive bid and ask quotes.")
 
 # ---------------------------------------------------------------------
 # Option-chain tab
@@ -1311,32 +1128,20 @@ with overview_tab:
 with chain_tab:
     st.subheader("Option chain")
 
-    valid_strikes = analysis_dataframe[
-        "Strike"
-    ].dropna()
+    valid_strikes = analysis_dataframe["Strike"].dropna()
 
     if analysis_dataframe.empty:
-        st.warning(
-            "No analysed option rows are available."
-        )
+        st.warning("No analysed option rows are available.")
 
     elif valid_strikes.empty:
-        st.warning(
-            "No valid option strikes are available."
-        )
+        st.warning("No valid option strikes are available.")
 
     else:
-        minimum_available_strike = float(
-            valid_strikes.min()
-        )
+        minimum_available_strike = float(valid_strikes.min())
 
-        maximum_available_strike = float(
-            valid_strikes.max()
-        )
+        maximum_available_strike = float(valid_strikes.max())
 
-        filter_1, filter_2 = st.columns(
-            [1, 2]
-        )
+        filter_1, filter_2 = st.columns([1, 2])
 
         with filter_1:
             option_type_filter = st.radio(
@@ -1350,18 +1155,14 @@ with chain_tab:
             )
 
         with filter_2:
-            if (
-                    minimum_available_strike
-                    == maximum_available_strike
-            ):
+            if minimum_available_strike == maximum_available_strike:
                 strike_range = (
                     minimum_available_strike,
                     maximum_available_strike,
                 )
 
                 st.caption(
-                    f"Only one strike is available: "
-                    f"{minimum_available_strike:.2f}"
+                    f"Only one strike is available: {minimum_available_strike:.2f}"
                 )
 
             else:
@@ -1388,78 +1189,25 @@ with chain_tab:
             width="stretch",
             height=600,
             column_config={
-                "Strike": (
-                    st.column_config.NumberColumn(
-                        format="$%.2f"
-                    )
-                ),
-                "Bid": (
-                    st.column_config.NumberColumn(
-                        format="$%.2f"
-                    )
-                ),
-                "Ask": (
-                    st.column_config.NumberColumn(
-                        format="$%.2f"
-                    )
-                ),
-                "Mid": (
-                    st.column_config.NumberColumn(
-                        format="$%.2f"
-                    )
-                ),
-                "Spread": (
-                    st.column_config.NumberColumn(
-                        format="$%.2f"
-                    )
-                ),
-                "Model Price": (
-                    st.column_config.NumberColumn(
-                        format="$%.2f"
-                    )
-                ),
-                "IV": (
-                    st.column_config.NumberColumn(
-                        format="%.4f"
-                    )
-                ),
-                "Delta": (
-                    st.column_config.NumberColumn(
-                        format="%.4f"
-                    )
-                ),
-                "Gamma": (
-                    st.column_config.NumberColumn(
-                        format="%.6f"
-                    )
-                ),
-                "Vega": (
-                    st.column_config.NumberColumn(
-                        format="%.4f"
-                    )
-                ),
-                "Theta": (
-                    st.column_config.NumberColumn(
-                        format="%.4f"
-                    )
-                ),
-                "Rho": (
-                    st.column_config.NumberColumn(
-                        format="%.4f"
-                    )
-                ),
+                "Strike": (st.column_config.NumberColumn(format="$%.2f")),
+                "Bid": (st.column_config.NumberColumn(format="$%.2f")),
+                "Ask": (st.column_config.NumberColumn(format="$%.2f")),
+                "Mid": (st.column_config.NumberColumn(format="$%.2f")),
+                "Spread": (st.column_config.NumberColumn(format="$%.2f")),
+                "Model Price": (st.column_config.NumberColumn(format="$%.2f")),
+                "IV": (st.column_config.NumberColumn(format="%.4f")),
+                "Delta": (st.column_config.NumberColumn(format="%.4f")),
+                "Gamma": (st.column_config.NumberColumn(format="%.6f")),
+                "Vega": (st.column_config.NumberColumn(format="%.4f")),
+                "Theta": (st.column_config.NumberColumn(format="%.4f")),
+                "Rho": (st.column_config.NumberColumn(format="%.4f")),
             },
         )
 
         st.download_button(
             "Download chain as CSV",
-            data=filtered_chain.to_csv(
-                index=False
-            ),
-            file_name=(
-                f"{snapshot.symbol}_"
-                f"{selected_expiry}_option_chain.csv"
-            ),
+            data=filtered_chain.to_csv(index=False),
+            file_name=(f"{snapshot.symbol}_{selected_expiry}_option_chain.csv"),
             mime="text/csv",
         )
 
@@ -1505,11 +1253,7 @@ with surface_tab:
         365,
     ]
 
-    future_expiries = [
-        expiry
-        for expiry in expiries
-        if expiry > date.today()
-    ]
+    future_expiries = [expiry for expiry in expiries if expiry > date.today()]
 
     surface_expiries: list[date] = []
 
@@ -1517,79 +1261,52 @@ with surface_tab:
         if not future_expiries:
             break
 
-        target_expiry = (
-                date.today()
-                + timedelta(days=target_day)
-        )
+        target_expiry = date.today() + timedelta(days=target_day)
 
         closest_expiry = min(
             future_expiries,
-            key=lambda expiry: abs(
-                (expiry - target_expiry).days
-            ),
+            key=lambda expiry: abs((expiry - target_expiry).days),
         )
 
         if closest_expiry not in surface_expiries:
-            surface_expiries.append(
-                closest_expiry
-            )
+            surface_expiries.append(closest_expiry)
 
     if not surface_expiries:
-        st.warning(
-            "No future expiries are available."
-        )
+        st.warning("No future expiries are available.")
 
     else:
         st.caption(
             "Expiries used: "
-            + ", ".join(
-                expiry.strftime("%d %b %Y")
-                for expiry in surface_expiries
-            )
+            + ", ".join(expiry.strftime("%d %b %Y") for expiry in surface_expiries)
         )
 
         if st.button(
-                "Build volatility surface",
-                type="primary",
-                key="build_surface_button",
+            "Build volatility surface",
+            type="primary",
+            key="build_surface_button",
         ):
             analyses = []
 
             progress = st.progress(0)
             status = st.empty()
 
-            total_expiries = len(
-                surface_expiries
-            )
+            total_expiries = len(surface_expiries)
 
-            for index, expiry in enumerate(
-                    surface_expiries
-            ):
-                status.write(
-                    f"Analysing {symbol} options "
-                    f"for {expiry:%d %b %Y}..."
-                )
+            for index, expiry in enumerate(surface_expiries):
+                status.write(f"Analysing {symbol} options for {expiry:%d %b %Y}...")
 
                 try:
-                    expiry_analysis = (
-                        load_option_analysis(
-                            symbol=symbol,
-                            expiry=expiry,
-                            risk_free_rate=(
-                                risk_free_rate
-                            ),
-                            dividend_yield=(
-                                dividend_yield
-                            ),
-                        )
+                    expiry_analysis = load_option_analysis(
+                        symbol=symbol,
+                        expiry=expiry,
+                        risk_free_rate=(risk_free_rate),
+                        dividend_yield=(dividend_yield),
                     )
 
-                    analysis_rows = (
-                        get_first_attribute(
-                            expiry_analysis,
-                            ["rows"],
-                            [],
-                        )
+                    analysis_rows = get_first_attribute(
+                        expiry_analysis,
+                        ["rows"],
+                        [],
                     )
 
                     if not analysis_rows:
@@ -1601,64 +1318,43 @@ with surface_tab:
                         )
                         continue
 
-                    analyses.append(
-                        expiry_analysis
-                    )
+                    analyses.append(expiry_analysis)
 
                 except Exception as error:
-                    st.warning(
-                        f"Skipped "
-                        f"{expiry:%d %b %Y}: "
-                        f"{error}"
-                    )
+                    st.warning(f"Skipped {expiry:%d %b %Y}: {error}")
 
                 finally:
-                    progress.progress(
-                        (index + 1)
-                        / total_expiries
-                    )
+                    progress.progress((index + 1) / total_expiries)
 
             status.empty()
             progress.empty()
 
             if len(analyses) < 2:
                 st.error(
-                    "At least two expiry analyses "
-                    "are needed to build the surface."
+                    "At least two expiry analyses are needed to build the surface."
                 )
 
             else:
                 try:
-                    surface = (
-                        build_volatility_surface(
-                            analyses=analyses,
-                            degree=2,
-                        )
+                    surface = build_volatility_surface(
+                        analyses=analyses,
+                        degree=2,
                     )
 
-                    st.session_state[
-                        "volatility_surface"
-                    ] = surface
+                    st.session_state["volatility_surface"] = surface
 
                 except Exception as error:
-                    st.error(
-                        "Could not build volatility "
-                        f"surface: {error}"
-                    )
+                    st.error(f"Could not build volatility surface: {error}")
 
-        surface = st.session_state.get(
-            "volatility_surface"
-        )
+        surface = st.session_state.get("volatility_surface")
 
         if surface is not None:
             try:
-                surface_figure = (
-                    plot_volatility_surface(
-                        surface,
-                        minimum_moneyness=0.90,
-                        maximum_moneyness=1.10,
-                        number_of_strikes=100,
-                    )
+                surface_figure = plot_volatility_surface(
+                    surface,
+                    minimum_moneyness=0.90,
+                    maximum_moneyness=1.10,
+                    number_of_strikes=100,
                 )
 
                 st.pyplot(
@@ -1666,33 +1362,21 @@ with surface_tab:
                     width="stretch",
                 )
 
-                plt.close(
-                    surface_figure
-                )
+                plt.close(surface_figure)
 
-                st.success(
-                    f"Built a surface from "
-                    f"{len(surface.smiles)} expiries."
-                )
+                st.success(f"Built a surface from {len(surface.smiles)} expiries.")
 
             except Exception as error:
-                st.error(
-                    "Could not plot volatility "
-                    f"surface: {error}"
-                )
+                st.error(f"Could not plot volatility surface: {error}")
 
 # ---------------------------------------------------------------------
 # Diagnostics tab
 # ---------------------------------------------------------------------
 
 with diagnostics_tab:
-    st.subheader(
-        "Market-data diagnostics"
-    )
+    st.subheader("Market-data diagnostics")
 
-    diagnostic_1, diagnostic_2, diagnostic_3 = (
-        st.columns(3)
-    )
+    diagnostic_1, diagnostic_2, diagnostic_3 = st.columns(3)
 
     diagnostic_1.metric(
         "Positive bid and ask",
@@ -1709,9 +1393,7 @@ with diagnostics_tab:
         len(analysis_dataframe),
     )
 
-    st.markdown(
-        "#### Raw downloaded quotes"
-    )
+    st.markdown("#### Raw downloaded quotes")
 
     st.dataframe(
         quote_dataframe,
@@ -1720,28 +1402,16 @@ with diagnostics_tab:
         height=500,
     )
 
-    with st.expander(
-            "Application state"
-    ):
+    with st.expander("Application state"):
         st.write(
             {
                 "symbol": snapshot.symbol,
                 "expiry": selected_expiry,
                 "spot": snapshot.spot,
-                "snapshot_time": (
-                    snapshot.timestamp
-                ),
-                "downloaded_quotes": len(
-                    snapshot.option_quotes
-                ),
-                "analysed_quotes": len(
-                    analysis_dataframe
-                ),
-                "analysis_columns": (
-                    analysis_dataframe
-                    .columns
-                    .tolist()
-                ),
+                "snapshot_time": (snapshot.timestamp),
+                "downloaded_quotes": len(snapshot.option_quotes),
+                "analysed_quotes": len(analysis_dataframe),
+                "analysis_columns": (analysis_dataframe.columns.tolist()),
             }
         )
 

@@ -2,7 +2,6 @@ from datetime import date
 
 from pyquant.data.alpaca_provider import AlpacaProvider
 
-
 provider = AlpacaProvider()
 
 snapshot = provider.get_snapshot(

@@ -5,7 +5,6 @@ from pyquant.event_volatility.earnings_lab.calculations.implied_move_from_snapsh
     implied_move_from_snapshot,
 )
 
-
 provider = AlpacaProvider()
 
 snapshot = provider.get_snapshot(

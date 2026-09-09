@@ -20,10 +20,7 @@ def plot_iv_smile(
 
     axis.scatter(
         smile.strikes,
-        [
-            implied_volatility * 100
-            for implied_volatility in smile.observed_ivs
-        ],
+        [implied_volatility * 100 for implied_volatility in smile.observed_ivs],
         label="Observed IV",
         alpha=0.7,
     )
@@ -42,8 +39,7 @@ def plot_iv_smile(
     )
 
     axis.set_title(
-        f"{analysis.symbol} Implied Volatility Smile\n"
-        f"Expiry: {analysis.expiry}"
+        f"{analysis.symbol} Implied Volatility Smile\nExpiry: {analysis.expiry}"
     )
     axis.set_xlabel("Strike")
     axis.set_ylabel("Implied volatility (%)")

@@ -1,8 +1,7 @@
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
-
 from alpaca.data.historical.option import OptionHistoricalDataClient
 from alpaca.data.historical.stock import StockHistoricalDataClient
 from alpaca.data.requests import (
@@ -24,9 +23,7 @@ class AlpacaProvider:
 
     def __init__(self) -> None:
         if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
-            raise ValueError(
-                "ALPACA_API_KEY and ALPACA_SECRET_KEY must be set."
-            )
+            raise ValueError("ALPACA_API_KEY and ALPACA_SECRET_KEY must be set.")
 
         self.stock_client = StockHistoricalDataClient(
             api_key=ALPACA_API_KEY,
@@ -54,10 +51,7 @@ class AlpacaProvider:
             exist_ok=True,
         )
 
-        return (
-            self.EXPIRY_CACHE_DIRECTORY
-            / f"{symbol.upper()}.csv"
-        )
+        return self.EXPIRY_CACHE_DIRECTORY / f"{symbol.upper()}.csv"
 
     def get_spot(
         self,
@@ -69,23 +63,17 @@ class AlpacaProvider:
             symbol_or_symbols=symbol,
         )
 
-        trades = self.stock_client.get_stock_latest_trade(
-            request
-        )
+        trades = self.stock_client.get_stock_latest_trade(request)
 
         trade = trades.get(symbol)
 
         if trade is None:
-            raise ValueError(
-                f"No latest stock trade returned for {symbol}."
-            )
+            raise ValueError(f"No latest stock trade returned for {symbol}.")
 
         spot = float(trade.price)
 
         if spot <= 0:
-            raise ValueError(
-                f"Invalid spot price returned for {symbol}: {spot}"
-            )
+            raise ValueError(f"Invalid spot price returned for {symbol}: {spot}")
 
         return spot
 
@@ -111,12 +99,7 @@ class AlpacaProvider:
         if not path.exists():
             return None
 
-        age = (
-            datetime.now()
-            - datetime.fromtimestamp(
-                path.stat().st_mtime
-            )
-        )
+        age = datetime.now() - datetime.fromtimestamp(path.stat().st_mtime)
 
         if age > timedelta(days=1):
             return None
@@ -126,10 +109,7 @@ class AlpacaProvider:
             header=None,
         )
 
-        return [
-            date.fromisoformat(value)
-            for value in dataframe[0]
-        ]
+        return [date.fromisoformat(value) for value in dataframe[0]]
 
     def get_expiries(
         self,
@@ -142,9 +122,7 @@ class AlpacaProvider:
         symbol = symbol.upper().strip()
 
         if not symbol:
-            raise ValueError(
-                "Symbol cannot be empty."
-            )
+            raise ValueError("Symbol cannot be empty.")
 
         cached = self._load_expiry_cache(symbol)
 
@@ -166,11 +144,7 @@ class AlpacaProvider:
                 page_token=page_token,
             )
 
-            response = (
-                self.trading_client.get_option_contracts(
-                    request
-                )
-            )
+            response = self.trading_client.get_option_contracts(request)
 
             contracts = response.option_contracts
 
@@ -208,18 +182,14 @@ class AlpacaProvider:
         symbol = symbol.upper().strip()
 
         if not symbol:
-            raise ValueError(
-                "Symbol cannot be empty."
-            )
+            raise ValueError("Symbol cannot be empty.")
 
         request = OptionChainRequest(
             underlying_symbol=symbol,
             expiration_date=expiry,
         )
 
-        chain = self.option_client.get_option_chain(
-            request
-        )
+        chain = self.option_client.get_option_chain(request)
 
         if not chain:
             raise ValueError(
@@ -246,42 +216,24 @@ class AlpacaProvider:
             )
 
             bid = self._positive_float_or_zero(
-                quote.bid_price
-                if quote is not None
-                else None
+                quote.bid_price if quote is not None else None
             )
 
             ask = self._positive_float_or_zero(
-                quote.ask_price
-                if quote is not None
-                else None
+                quote.ask_price if quote is not None else None
             )
 
             last_price = self._positive_float_or_none(
-                trade.price
-                if trade is not None
-                else None
+                trade.price if trade is not None else None
             )
 
-            last_trade_time = (
-                trade.timestamp
-                if trade is not None
-                else None
-            )
+            last_trade_time = trade.timestamp if trade is not None else None
 
-            has_valid_midpoint = (
-                bid > 0
-                and ask > 0
-            )
+            has_valid_midpoint = bid > 0 and ask > 0
 
-            has_valid_last_price = (
-                last_price is not None
-            )
+            has_valid_last_price = last_price is not None
 
-            if (
-                not has_valid_midpoint
-                and not has_valid_last_price
-            ):
+            if not has_valid_midpoint and not has_valid_last_price:
                 invalid_prices += 1
                 continue
 
@@ -317,9 +269,7 @@ class AlpacaProvider:
         """
         symbol = symbol.upper().strip()
 
-        spot = self.get_spot(
-            symbol
-        )
+        spot = self.get_spot(symbol)
 
         option_quotes = self.get_option_chain(
             symbol=symbol,
@@ -347,18 +297,14 @@ class AlpacaProvider:
         """
         if not contract_symbol.startswith(underlying):
             raise ValueError(
-                f"Contract {contract_symbol} does not match "
-                f"underlying {underlying}."
+                f"Contract {contract_symbol} does not match underlying {underlying}."
             )
 
-        contract_details = contract_symbol[
-            len(underlying):
-        ]
+        contract_details = contract_symbol[len(underlying) :]
 
         if len(contract_details) != 15:
             raise ValueError(
-                f"Unexpected Alpaca option symbol format: "
-                f"{contract_symbol}"
+                f"Unexpected Alpaca option symbol format: {contract_symbol}"
             )
 
         expiry_text = contract_details[:6]
@@ -378,8 +324,7 @@ class AlpacaProvider:
 
         else:
             raise ValueError(
-                f"Unknown option type code "
-                f"{option_type_code!r} in {contract_symbol}."
+                f"Unknown option type code {option_type_code!r} in {contract_symbol}."
             )
 
         try:
@@ -387,8 +332,7 @@ class AlpacaProvider:
 
         except ValueError as error:
             raise ValueError(
-                f"Invalid strike in contract symbol: "
-                f"{contract_symbol}"
+                f"Invalid strike in contract symbol: {contract_symbol}"
             ) from error
 
         return EuropeanOption(
@@ -415,11 +359,7 @@ class AlpacaProvider:
         except (TypeError, ValueError):
             return 0.0
 
-        return (
-            converted
-            if converted > 0
-            else 0.0
-        )
+        return converted if converted > 0 else 0.0
 
     @staticmethod
     def _positive_float_or_none(
@@ -438,8 +378,4 @@ class AlpacaProvider:
         except (TypeError, ValueError):
             return None
 
-        return (
-            converted
-            if converted > 0
-            else None
-        )
+        return converted if converted > 0 else None

@@ -17,15 +17,10 @@ def implied_move_from_snapshot(
 
     spot = snapshot.spot
 
-    strikes = {
-        quote.option.strike
-        for quote in snapshot.option_quotes
-    }
+    strikes = {quote.option.strike for quote in snapshot.option_quotes}
 
     if not strikes:
-        raise ValueError(
-            "Snapshot contains no option strikes."
-        )
+        raise ValueError("Snapshot contains no option strikes.")
 
     atm_strike = min(
         strikes,
@@ -46,27 +41,19 @@ def implied_move_from_snapshot(
             put_quote = quote
 
     if call_quote is None:
-        raise ValueError(
-            f"No call found at ATM strike {atm_strike}."
-        )
+        raise ValueError(f"No call found at ATM strike {atm_strike}.")
 
     if put_quote is None:
-        raise ValueError(
-            f"No put found at ATM strike {atm_strike}."
-        )
+        raise ValueError(f"No put found at ATM strike {atm_strike}.")
 
     call_mid = call_quote.mid_price
     put_mid = put_quote.mid_price
 
     if call_mid is None:
-        raise ValueError(
-            f"No usable call midpoint at strike {atm_strike}."
-        )
+        raise ValueError(f"No usable call midpoint at strike {atm_strike}.")
 
     if put_mid is None:
-        raise ValueError(
-            f"No usable put midpoint at strike {atm_strike}."
-        )
+        raise ValueError(f"No usable put midpoint at strike {atm_strike}.")
 
     return ImpliedMove(
         spot=spot,

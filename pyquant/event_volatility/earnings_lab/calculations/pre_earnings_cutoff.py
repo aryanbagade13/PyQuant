@@ -5,7 +5,6 @@ from pyquant.event_volatility.earnings_lab.models.earnings_release_timing import
     EarningsReleaseTiming,
 )
 
-
 NEW_YORK = ZoneInfo("America/New_York")
 
 
@@ -40,9 +39,7 @@ def get_pre_earnings_cutoff(
         observation_date = earnings_date
 
     elif release_timing == EarningsReleaseTiming.BEFORE_MARKET_OPEN:
-        observation_date = _previous_weekday(
-            earnings_date
-        )
+        observation_date = _previous_weekday(earnings_date)
 
     elif release_timing == EarningsReleaseTiming.DURING_MARKET_HOURS:
         raise ValueError(
@@ -57,9 +54,7 @@ def get_pre_earnings_cutoff(
         )
 
     else:
-        raise ValueError(
-            f"Unsupported earnings release timing: {release_timing}"
-        )
+        raise ValueError(f"Unsupported earnings release timing: {release_timing}")
 
     return datetime.combine(
         observation_date,

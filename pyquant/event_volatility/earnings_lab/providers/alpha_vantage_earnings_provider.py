@@ -73,9 +73,7 @@ class AlphaVantageEarningsProvider:
             return EarningsReport(
                 symbol=symbol,
                 reported_date=date.fromisoformat(str(item["reportedDate"])),
-                fiscal_period_end=date.fromisoformat(
-                    str(item["fiscalDateEnding"])
-                ),
+                fiscal_period_end=date.fromisoformat(str(item["fiscalDateEnding"])),
                 estimated_eps=_optional_float(item.get("estimatedEPS")),
                 actual_eps=_optional_float(item.get("reportedEPS")),
                 provider_surprise=_optional_float(item.get("surprise")),
@@ -84,7 +82,9 @@ class AlphaVantageEarningsProvider:
                 ),
             )
         except (KeyError, TypeError, ValueError) as error:
-            raise RuntimeError("Alpha Vantage returned an invalid earnings row.") from error
+            raise RuntimeError(
+                "Alpha Vantage returned an invalid earnings row."
+            ) from error
 
 
 def _optional_float(value: object) -> float | None:

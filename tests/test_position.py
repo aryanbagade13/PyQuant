@@ -6,7 +6,6 @@ from pyquant.market.option_quote import OptionQuote
 from pyquant.portfolio.portfolio import Portfolio
 from pyquant.portfolio.position import Position
 
-
 option_1 = EuropeanOption(
     underlying="AAPL",
     strike=200.0,

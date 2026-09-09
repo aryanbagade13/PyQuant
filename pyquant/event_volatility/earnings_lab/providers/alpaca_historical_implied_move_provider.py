@@ -6,14 +6,13 @@ from zoneinfo import ZoneInfo
 from curl_cffi import requests
 
 from pyquant.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+from pyquant.event_volatility.earnings_lab.calculations.pre_earnings_cutoff import (
+    get_pre_earnings_cutoff,
+)
 from pyquant.event_volatility.earnings_lab.models.earnings_release_timing import (
     EarningsReleaseTiming,
 )
 from pyquant.event_volatility.earnings_lab.models.implied_move import ImpliedMove
-from pyquant.event_volatility.earnings_lab.calculations.pre_earnings_cutoff import (
-    get_pre_earnings_cutoff,
-)
-
 
 NEW_YORK = ZoneInfo("America/New_York")
 
@@ -67,9 +66,7 @@ class AlpacaHistoricalImpliedMoveProvider:
         if spot <= 0:
             raise ValueError("Spot must be positive.")
 
-        contracts = self._get_candidate_contracts(
-            symbol, earnings_date, release_timing
-        )
+        contracts = self._get_candidate_contracts(symbol, earnings_date, release_timing)
         call, put, strike = self._select_atm_pair(contracts, spot)
         cutoff = get_pre_earnings_cutoff(earnings_date, release_timing)
         bars = self._get_pre_cutoff_bars(
@@ -164,9 +161,7 @@ class AlpacaHistoricalImpliedMoveProvider:
         symbols: list[str],
         cutoff: datetime,
     ) -> dict[str, HistoricalOptionBar]:
-        session_start = datetime.combine(
-            cutoff.date(), time(9, 30), tzinfo=NEW_YORK
-        )
+        session_start = datetime.combine(cutoff.date(), time(9, 30), tzinfo=NEW_YORK)
         payload = self._get_json(
             self.BARS_URL,
             {
@@ -198,7 +193,9 @@ class AlpacaHistoricalImpliedMoveProvider:
                 except (KeyError, TypeError, ValueError):
                     continue
                 if timestamp.tzinfo is None:
-                    raise ValueError("Historical option bar timestamp must be timezone-aware.")
+                    raise ValueError(
+                        "Historical option bar timestamp must be timezone-aware."
+                    )
                 if timestamp <= cutoff and close > 0:
                     eligible.append(HistoricalOptionBar(close, timestamp))
 

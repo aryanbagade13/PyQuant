@@ -39,9 +39,7 @@ class VolatilitySmile:
         number_of_points: int = 200,
     ) -> tuple[np.ndarray, np.ndarray]:
         if number_of_points < 2:
-            raise ValueError(
-                "number_of_points must be at least 2."
-            )
+            raise ValueError("number_of_points must be at least 2.")
 
         strike_grid = np.linspace(
             min(self.strikes),
@@ -50,7 +48,6 @@ class VolatilitySmile:
         )
 
         fitted_ivs = self.fitted_curve(strike_grid)
-
         return strike_grid, fitted_ivs
 
 

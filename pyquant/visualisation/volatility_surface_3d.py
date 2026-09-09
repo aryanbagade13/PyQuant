@@ -35,9 +35,7 @@ def plot_volatility_surface(
         raise ValueError("Minimum moneyness must be positive.")
 
     if maximum_moneyness <= minimum_moneyness:
-        raise ValueError(
-            "Maximum moneyness must be greater than minimum moneyness."
-        )
+        raise ValueError("Maximum moneyness must be greater than minimum moneyness.")
 
     if number_of_strikes < 2:
         raise ValueError("At least two strike points are required.")
@@ -53,19 +51,13 @@ def plot_volatility_surface(
     strikes = moneyness_values * surface.spot
 
     days_to_expiry = np.array(
-        [
-            max((smile.expiry - valuation_date).days, 0)
-            for smile in surface.smiles
-        ],
+        [max((smile.expiry - valuation_date).days, 0) for smile in surface.smiles],
         dtype=float,
     )
 
     implied_volatilities = np.array(
         [
-            [
-                smile.implied_volatility(float(strike))
-                for strike in strikes
-            ]
+            [smile.implied_volatility(float(strike)) for strike in strikes]
             for smile in surface.smiles
         ],
         dtype=float,
@@ -101,9 +93,7 @@ def plot_volatility_surface(
             linewidth=1,
         )
 
-    axis.set_title(
-        f"{surface.symbol} Implied Volatility Surface"
-    )
+    axis.set_title(f"{surface.symbol} Implied Volatility Surface")
 
     axis.set_xlabel("Moneyness — Strike / Spot")
     axis.set_ylabel("Days to Expiry")

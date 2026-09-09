@@ -1,9 +1,9 @@
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from pyquant.portfolio.risk_report import RiskReport
 from pyquant.market.market_state import MarketState
 from pyquant.portfolio.position import Position
+from pyquant.portfolio.risk_report import RiskReport
 
 
 @dataclass
@@ -18,8 +18,7 @@ class Portfolio:
 
     def market_value(self) -> float:
         return sum(
-            position.quantity * position.quote.mid_price
-            for position in self.positions
+            position.quantity * position.quote.mid_price for position in self.positions
         )
 
     def gross_market_value(self) -> float:
@@ -33,80 +32,54 @@ class Portfolio:
 
         for position in self.positions:
             if position.quantity > 0:
-                total += (
-                    position.quantity
-                    * position.quote.bid
-                )
+                total += position.quantity * position.quote.bid
             else:
-                total += (
-                    position.quantity
-                    * position.quote.ask
-                )
+                total += position.quantity * position.quote.ask
 
         return total
 
     def liquidation_cost(self) -> float:
-        return (
-            self.market_value()
-            - self.liquidation_value()
-        )
+        return self.market_value() - self.liquidation_value()
 
     def theoretical_value(
         self,
         market: MarketState,
     ) -> float:
-        return sum(
-            position.theoretical_value(market)
-            for position in self.positions
-        )
+        return sum(position.theoretical_value(market) for position in self.positions)
+
     def delta(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
-        return sum(
-            position.delta(market)
-            for position in self.positions
-        )
+        return sum(position.delta(market) for position in self.positions)
 
     def gamma(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
-        return sum(
-            position.gamma(market)
-            for position in self.positions
-        )
+        return sum(position.gamma(market) for position in self.positions)
 
     def vega(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
-        return sum(
-            position.vega(market)
-            for position in self.positions
-        )
+        return sum(position.vega(market) for position in self.positions)
 
     def theta(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
-        return sum(
-            position.theta(market)
-            for position in self.positions
-        )
+        return sum(position.theta(market) for position in self.positions)
 
     def rho(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
-        return sum(
-            position.rho(market)
-            for position in self.positions
-        )
+        return sum(position.rho(market) for position in self.positions)
 
     def risk_report(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> RiskReport:
         return RiskReport(
             theoretical_value=self.theoretical_value(market),
@@ -116,6 +89,7 @@ class Portfolio:
             theta=self.theta(market),
             rho=self.rho(market),
         )
+
     def __len__(self) -> int:
         return len(self.positions)
 
@@ -126,10 +100,7 @@ class Portfolio:
         if not self.positions:
             return "Portfolio is empty."
 
-        position_lines = "\n".join(
-            f"  {position}"
-            for position in self.positions
-        )
+        position_lines = "\n".join(f"  {position}" for position in self.positions)
 
         return (
             f"Portfolio\n"

@@ -39,9 +39,7 @@ def test_surface_finds_exact_expiry():
         smiles=(first_smile, second_smile),
     )
 
-    result = surface.smile_for_expiry(
-        date(2026, 8, 21)
-    )
+    result = surface.smile_for_expiry(date(2026, 8, 21))
 
     assert result is second_smile
 
@@ -60,9 +58,7 @@ def test_surface_finds_nearest_expiry():
         smiles=(first_smile, second_smile),
     )
 
-    result = surface.nearest_smile(
-        date(2026, 8, 18)
-    )
+    result = surface.nearest_smile(date(2026, 8, 18))
 
     assert result is second_smile
 
@@ -75,12 +71,8 @@ def test_missing_exact_expiry_raises_error():
     surface = VolatilitySurface(
         symbol="AAPL",
         spot=210.0,
-        smiles=(
-            FakeSmile(date(2026, 8, 7)),
-        ),
+        smiles=(FakeSmile(date(2026, 8, 7)),),
     )
 
     with pytest.raises(ValueError):
-        surface.smile_for_expiry(
-            date(2026, 8, 21)
-        )
+        surface.smile_for_expiry(date(2026, 8, 21))

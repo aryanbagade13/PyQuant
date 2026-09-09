@@ -35,9 +35,7 @@ class NasdaqReleaseTimingProvider:
             row_symbol = str(row.get("symbol", "")).strip().upper()
             if row_symbol == symbol:
                 raw_timing = (
-                    row.get("time")
-                    or row.get("reportTime")
-                    or row.get("releaseTime")
+                    row.get("time") or row.get("reportTime") or row.get("releaseTime")
                 )
                 return self._normalise_timing(raw_timing)
 
@@ -74,9 +72,7 @@ class NasdaqReleaseTimingProvider:
         rows = data.get("rows")
         if rows is None:
             return []
-        if not isinstance(rows, list) or not all(
-            isinstance(row, dict) for row in rows
-        ):
+        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
             raise RuntimeError("Nasdaq returned invalid earnings calendar rows.")
         return rows
 

@@ -13,5 +13,4 @@ class ReleaseTimingProvider(Protocol):
         self,
         symbol: str,
         earnings_date: date,
-    ) -> EarningsReleaseTiming:
-        ...
+    ) -> EarningsReleaseTiming: ...

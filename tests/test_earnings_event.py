@@ -4,8 +4,8 @@ import pytest
 
 from pyquant.event_volatility import (
     EarningsEvent,
+    EarningsPriceWindow,
     EarningsReleaseTiming,
-    EarningsPriceWindow
 )
 
 
@@ -35,8 +35,8 @@ def test_price_window_calculates_negative_event_return():
 
 def test_price_window_rejects_equal_dates():
     with pytest.raises(
-            ValueError,
-            match="Pre-event date must be before post-event date.",
+        ValueError,
+        match="Pre-event date must be before post-event date.",
     ):
         EarningsPriceWindow(
             pre_event_date=date(2025, 7, 31),
@@ -48,8 +48,8 @@ def test_price_window_rejects_equal_dates():
 
 def test_price_window_rejects_reversed_dates():
     with pytest.raises(
-            ValueError,
-            match="Pre-event date must be before post-event date.",
+        ValueError,
+        match="Pre-event date must be before post-event date.",
     ):
         EarningsPriceWindow(
             pre_event_date=date(2025, 8, 1),
@@ -61,8 +61,8 @@ def test_price_window_rejects_reversed_dates():
 
 def test_price_window_rejects_non_positive_pre_event_price():
     with pytest.raises(
-            ValueError,
-            match="Pre-event price must be positive.",
+        ValueError,
+        match="Pre-event price must be positive.",
     ):
         EarningsPriceWindow(
             pre_event_date=date(2025, 7, 31),
@@ -74,9 +74,8 @@ def test_price_window_rejects_non_positive_pre_event_price():
 
 def test_price_window_rejects_non_positive_post_event_price():
     with pytest.raises(
-            ValueError,
-            match="Post-event price must be positive.",
-
+        ValueError,
+        match="Post-event price must be positive.",
     ):
         EarningsPriceWindow(
             pre_event_date=date(2025, 7, 31),
@@ -103,21 +102,13 @@ def test_earnings_event_calculates_surprises_and_move():
 
     assert event.symbol == "AAPL"
 
-    assert event.eps_surprise == pytest.approx(
-        (1.52 - 1.43) / 1.43
-    )
+    assert event.eps_surprise == pytest.approx((1.52 - 1.43) / 1.43)
 
-    assert event.revenue_surprise == pytest.approx(
-        (91.0 - 89.2) / 89.2
-    )
+    assert event.revenue_surprise == pytest.approx((91.0 - 89.2) / 89.2)
 
-    assert event.earnings_return == pytest.approx(
-        216.30 / 205.10 - 1.0
-    )
+    assert event.earnings_return == pytest.approx(216.30 / 205.10 - 1.0)
 
-    assert event.absolute_earnings_move == pytest.approx(
-        abs(216.30 / 205.10 - 1.0)
-    )
+    assert event.absolute_earnings_move == pytest.approx(abs(216.30 / 205.10 - 1.0))
 
 
 def test_earnings_event_handles_negative_eps_estimate():
@@ -152,15 +143,13 @@ def test_earnings_event_returns_none_for_zero_eps_estimate():
 
     assert event.eps_surprise is None
 
-    assert event.revenue_surprise == pytest.approx(
-        (105.0 - 100.0) / 100.0
-    )
+    assert event.revenue_surprise == pytest.approx((105.0 - 100.0) / 100.0)
 
 
 def test_earnings_event_rejects_non_positive_pre_earnings_price():
     with pytest.raises(
-            ValueError,
-            match="Pre-earnings price must be positive.",
+        ValueError,
+        match="Pre-earnings price must be positive.",
     ):
         EarningsEvent(
             symbol="TEST",
@@ -177,8 +166,8 @@ def test_earnings_event_rejects_non_positive_pre_earnings_price():
 
 def test_earnings_event_rejects_non_positive_post_earnings_price():
     with pytest.raises(
-            ValueError,
-            match="Post-earnings price must be positive.",
+        ValueError,
+        match="Post-earnings price must be positive.",
     ):
         EarningsEvent(
             symbol="TEST",
@@ -195,8 +184,8 @@ def test_earnings_event_rejects_non_positive_post_earnings_price():
 
 def test_earnings_event_rejects_negative_realised_volatility():
     with pytest.raises(
-            ValueError,
-            match="Realised volatility cannot be negative.",
+        ValueError,
+        match="Realised volatility cannot be negative.",
     ):
         EarningsEvent(
             symbol="TEST",
@@ -214,8 +203,8 @@ def test_earnings_event_rejects_negative_realised_volatility():
 
 def test_earnings_event_rejects_negative_implied_volatility():
     with pytest.raises(
-            ValueError,
-            match="Implied volatility cannot be negative.",
+        ValueError,
+        match="Implied volatility cannot be negative.",
     ):
         EarningsEvent(
             symbol="TEST",
@@ -260,7 +249,4 @@ def test_earnings_event_stores_release_timing():
         post_earnings_price=216.30,
     )
 
-    assert (
-            event.release_timing
-            is EarningsReleaseTiming.AFTER_MARKET_CLOSE
-    )
+    assert event.release_timing is EarningsReleaseTiming.AFTER_MARKET_CLOSE

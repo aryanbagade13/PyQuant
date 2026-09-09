@@ -14,7 +14,7 @@ class OptionAnalysisRow:
     bid: float
     ask: float
     mid_price: float
-    spread: float|None
+    spread: float | None
     moneyness: float
     implied_volatility: float
     delta: float
@@ -32,24 +32,14 @@ class OptionChainAnalysis:
     rows: tuple[OptionAnalysisRow, ...]
 
     def calls(self) -> tuple[OptionAnalysisRow, ...]:
-        return tuple(
-            row
-            for row in self.rows
-            if str(row.option_type).lower() == "call"
-        )
+        return tuple(row for row in self.rows if str(row.option_type).lower() == "call")
 
     def puts(self) -> tuple[OptionAnalysisRow, ...]:
-        return tuple(
-            row
-            for row in self.rows
-            if str(row.option_type).lower() == "put"
-        )
+        return tuple(row for row in self.rows if str(row.option_type).lower() == "put")
 
     def at_the_money(self) -> OptionAnalysisRow:
         if not self.rows:
-            raise ValueError(
-                "Cannot find an at-the-money option in an empty analysis."
-            )
+            raise ValueError("Cannot find an at-the-money option in an empty analysis.")
 
         return min(
             self.rows,
@@ -58,20 +48,13 @@ class OptionChainAnalysis:
 
     def average_iv(self) -> float:
         if not self.rows:
-            raise ValueError(
-                "Cannot calculate average IV for an empty analysis."
-            )
+            raise ValueError("Cannot calculate average IV for an empty analysis.")
 
-        return sum(
-            row.implied_volatility
-            for row in self.rows
-        ) / len(self.rows)
+        return sum(row.implied_volatility for row in self.rows) / len(self.rows)
 
     def highest_gamma(self) -> OptionAnalysisRow:
         if not self.rows:
-            raise ValueError(
-                "Cannot find highest gamma in an empty analysis."
-            )
+            raise ValueError("Cannot find highest gamma in an empty analysis.")
 
         return max(
             self.rows,
@@ -135,10 +118,10 @@ def analyse_option_chain(
                 market=market,
             )
         except (
-                ValueError,
-                ZeroDivisionError,
-                RuntimeError,
-                OverflowError,
+            ValueError,
+            ZeroDivisionError,
+            RuntimeError,
+            OverflowError,
         ):
             continue
 

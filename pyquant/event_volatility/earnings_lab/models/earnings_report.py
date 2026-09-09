@@ -30,9 +30,7 @@ class EarningsReport:
             raise ValueError("Symbol cannot be empty.")
 
         if self.reported_date < self.fiscal_period_end:
-            raise ValueError(
-                "Reported date cannot be before the fiscal period end."
-            )
+            raise ValueError("Reported date cannot be before the fiscal period end.")
 
         object.__setattr__(
             self,
@@ -54,6 +52,4 @@ class EarningsReport:
         ):
             return None
 
-        return (
-            self.actual_eps - self.estimated_eps
-        ) / abs(self.estimated_eps)
+        return (self.actual_eps - self.estimated_eps) / abs(self.estimated_eps)

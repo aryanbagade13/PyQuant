@@ -24,24 +24,16 @@ class ImpliedMove:
 
     def __post_init__(self) -> None:
         if self.spot <= 0:
-            raise ValueError(
-                "Spot price must be positive."
-            )
+            raise ValueError("Spot price must be positive.")
 
         if self.atm_strike <= 0:
-            raise ValueError(
-                "ATM strike must be positive."
-            )
+            raise ValueError("ATM strike must be positive.")
 
         if self.call_mid < 0:
-            raise ValueError(
-                "Call midpoint cannot be negative."
-            )
+            raise ValueError("Call midpoint cannot be negative.")
 
         if self.put_mid < 0:
-            raise ValueError(
-                "Put midpoint cannot be negative."
-            )
+            raise ValueError("Put midpoint cannot be negative.")
 
     @property
     def straddle_price(self) -> float:

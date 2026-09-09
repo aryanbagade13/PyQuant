@@ -20,9 +20,7 @@ class OptionQuote:
         if self.last_price is not None and self.last_price > 0:
             return self.last_price
 
-        raise ValueError(
-            "No valid midpoint or last price is available."
-        )
+        raise ValueError("No valid midpoint or last price is available.")
 
     @property
     def spread(self) -> float | None:

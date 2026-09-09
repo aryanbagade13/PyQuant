@@ -21,16 +21,12 @@ class YahooFinanceProvider:
         history = ticker.history(period="1d")
 
         if history.empty:
-            raise ValueError(
-                f"No price data returned for {symbol}."
-            )
+            raise ValueError(f"No price data returned for {symbol}.")
 
         spot = float(history["Close"].iloc[-1])
 
         if spot <= 0:
-            raise ValueError(
-                f"Invalid spot price returned for {symbol}: {spot}"
-            )
+            raise ValueError(f"Invalid spot price returned for {symbol}: {spot}")
 
         return spot
 
@@ -56,9 +52,7 @@ class YahooFinanceProvider:
             progress=False,
         )
         if history.empty or "Close" not in history:
-            raise ValueError(
-                f"No historical price data returned for {symbol}."
-            )
+            raise ValueError(f"No historical price data returned for {symbol}.")
 
         close_series = history["Close"]
         if isinstance(close_series, pd.DataFrame):
@@ -125,9 +119,7 @@ class YahooFinanceProvider:
     ) -> list[OptionQuote]:
         ticker = yf.Ticker(symbol)
 
-        chain = ticker.option_chain(
-            expiry.isoformat()
-        )
+        chain = ticker.option_chain(expiry.isoformat())
 
         quotes: list[OptionQuote] = []
 
@@ -163,10 +155,7 @@ class YahooFinanceProvider:
             exist_ok=True,
         )
 
-        cache_prefix = (
-            self.CACHE_DIRECTORY
-            / f"{symbol}_{expiry.isoformat()}"
-        )
+        cache_prefix = self.CACHE_DIRECTORY / f"{symbol}_{expiry.isoformat()}"
 
         calls.to_csv(
             f"{cache_prefix}_calls.csv",
@@ -183,18 +172,11 @@ class YahooFinanceProvider:
         symbol: str,
         expiry: date,
     ) -> tuple[pd.DataFrame, pd.DataFrame] | None:
-        cache_prefix = (
-            self.CACHE_DIRECTORY
-            / f"{symbol}_{expiry.isoformat()}"
-        )
+        cache_prefix = self.CACHE_DIRECTORY / f"{symbol}_{expiry.isoformat()}"
 
-        calls_path = Path(
-            f"{cache_prefix}_calls.csv"
-        )
+        calls_path = Path(f"{cache_prefix}_calls.csv")
 
-        puts_path = Path(
-            f"{cache_prefix}_puts.csv"
-        )
+        puts_path = Path(f"{cache_prefix}_puts.csv")
 
         if not calls_path.exists() or not puts_path.exists():
             return None
@@ -223,17 +205,13 @@ class YahooFinanceProvider:
 
             raw_last_trade_time = row.get("lastTradeDate")
 
-            if raw_last_trade_time is not None and not pd.isna(
-                raw_last_trade_time
-            ):
+            if raw_last_trade_time is not None and not pd.isna(raw_last_trade_time):
                 parsed_last_trade_time = pd.to_datetime(
                     raw_last_trade_time,
                     utc=True,
                 )
 
-                last_trade_time = (
-                    parsed_last_trade_time.to_pydatetime()
-                )
+                last_trade_time = parsed_last_trade_time.to_pydatetime()
 
             if strike <= 0:
                 continue
@@ -244,11 +222,7 @@ class YahooFinanceProvider:
             if ask < bid:
                 continue
 
-            if (
-                bid == 0.0
-                and ask == 0.0
-                and last_price <= 0.0
-            ):
+            if bid == 0.0 and ask == 0.0 and last_price <= 0.0:
                 continue
 
             option = EuropeanOption(

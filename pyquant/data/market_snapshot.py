@@ -20,14 +20,10 @@ class MarketSnapshot:
 
     def calls(self) -> tuple[OptionQuote, ...]:
         return tuple(
-            quote
-            for quote in self.option_quotes
-            if quote.option.option_type == "call"
+            quote for quote in self.option_quotes if quote.option.option_type == "call"
         )
 
     def puts(self) -> tuple[OptionQuote, ...]:
         return tuple(
-            quote
-            for quote in self.option_quotes
-            if quote.option.option_type == "put"
+            quote for quote in self.option_quotes if quote.option.option_type == "put"
         )

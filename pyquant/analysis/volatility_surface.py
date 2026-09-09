@@ -1,6 +1,6 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
-from typing import Sequence
 
 from pyquant.analysis.option_chain_analysis import OptionChainAnalysis
 from pyquant.analysis.volatility_smile import (
@@ -41,9 +41,7 @@ class VolatilitySurface:
             if smile.expiry == expiry:
                 return smile
 
-        available_expiries = ", ".join(
-            expiry.isoformat() for expiry in self.expiries()
-        )
+        available_expiries = ", ".join(expiry.isoformat() for expiry in self.expiries())
 
         raise ValueError(
             f"No volatility smile exists for expiry {expiry}. "

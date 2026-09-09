@@ -1,15 +1,22 @@
 from dataclasses import dataclass
-from dataclasses import replace
 
 from pyquant.market.market_state import MarketState
 from pyquant.market.option_quote import OptionQuote
 from pyquant.pricing.black_scholes import black_scholes_price
 from pyquant.pricing.greeks import (
     delta as option_delta,
+)
+from pyquant.pricing.greeks import (
     gamma as option_gamma,
-    vega as option_vega,
-    theta as option_theta,
+)
+from pyquant.pricing.greeks import (
     rho as option_rho,
+)
+from pyquant.pricing.greeks import (
+    theta as option_theta,
+)
+from pyquant.pricing.greeks import (
+    vega as option_vega,
 )
 
 
@@ -20,13 +27,11 @@ class Position:
 
     def __post_init__(self) -> None:
         if self.quantity == 0:
-            raise ValueError(
-                "Position quantity cannot be zero."
-            )
+            raise ValueError("Position quantity cannot be zero.")
 
     def theoretical_value(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
         option_price = black_scholes_price(
             option=self.quote.option,
@@ -36,8 +41,8 @@ class Position:
         return self.quantity * option_price
 
     def delta(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
         return self.quantity * option_delta(
             option=self.quote.option,
@@ -45,8 +50,8 @@ class Position:
         )
 
     def gamma(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
         return self.quantity * option_gamma(
             option=self.quote.option,
@@ -54,8 +59,8 @@ class Position:
         )
 
     def vega(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
         return self.quantity * option_vega(
             option=self.quote.option,
@@ -63,8 +68,8 @@ class Position:
         )
 
     def theta(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
         return self.quantity * option_theta(
             option=self.quote.option,
@@ -72,8 +77,8 @@ class Position:
         )
 
     def rho(
-            self,
-            market: MarketState,
+        self,
+        market: MarketState,
     ) -> float:
         return self.quantity * option_rho(
             option=self.quote.option,

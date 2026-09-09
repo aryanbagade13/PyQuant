@@ -77,8 +77,18 @@ def test_after_close_chooses_first_expiry_after_event(monkeypatch) -> None:
 def test_builds_implied_move_from_pre_cutoff_bars(monkeypatch) -> None:
     provider = make_provider()
     contracts = [
-        {"symbol": "AAPL_CALL", "strike_price": "235", "type": "call", "expiration_date": "2025-01-31"},
-        {"symbol": "AAPL_PUT", "strike_price": "235", "type": "put", "expiration_date": "2025-01-31"},
+        {
+            "symbol": "AAPL_CALL",
+            "strike_price": "235",
+            "type": "call",
+            "expiration_date": "2025-01-31",
+        },
+        {
+            "symbol": "AAPL_PUT",
+            "strike_price": "235",
+            "type": "put",
+            "expiration_date": "2025-01-31",
+        },
     ]
     monkeypatch.setattr(
         provider,

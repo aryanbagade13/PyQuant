@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 
-
 from pyquant.analysis.option_chain_analysis import analyse_option_chain
 from pyquant.analysis.volatility_surface import build_volatility_surface
 from pyquant.data.alpaca_provider import AlpacaProvider
@@ -16,17 +15,11 @@ def main() -> None:
     expiries = provider.get_expiries(symbol)
 
     if not expiries:
-        raise ValueError(
-            f"No option expiries returned for {symbol}."
-        )
+        raise ValueError(f"No option expiries returned for {symbol}.")
 
     minimum_expiry = date.today() + timedelta(days=7)
 
-    valid_expiries = [
-        expiry
-        for expiry in expiries
-        if expiry >= minimum_expiry
-    ]
+    valid_expiries = [expiry for expiry in expiries if expiry >= minimum_expiry]
 
     if not valid_expiries:
         raise ValueError(
@@ -63,22 +56,15 @@ def main() -> None:
             )
 
             if not analysis.rows:
-                print(
-                    f"Skipping {expiry}: no options were successfully analysed."
-                )
+                print(f"Skipping {expiry}: no options were successfully analysed.")
                 continue
 
             analyses.append(analysis)
 
-            print(
-                f"Analysed {len(analysis.rows)} options "
-                f"for expiry {expiry}."
-            )
+            print(f"Analysed {len(analysis.rows)} options for expiry {expiry}.")
 
         except Exception as error:
-            print(
-                f"Skipping {expiry} because analysis failed: {error}"
-            )
+            print(f"Skipping {expiry} because analysis failed: {error}")
 
     if len(analyses) < 2:
         raise ValueError(
@@ -99,10 +85,7 @@ def main() -> None:
     print("\nExpiries included:")
 
     for smile in surface.smiles:
-        print(
-            f"{smile.expiry}: "
-            f"{len(smile.strikes)} IV observations"
-        )
+        print(f"{smile.expiry}: {len(smile.strikes)} IV observations")
 
     plot_volatility_surface(
         surface=surface,

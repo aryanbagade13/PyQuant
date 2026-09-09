@@ -1,8 +1,8 @@
 import csv
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
-from typing import Iterable, Mapping
 
 from pyquant.event_volatility.earnings_lab.models.earnings_price_window import (
     EarningsPriceWindow,
@@ -129,7 +129,9 @@ class HistoricalEarningsDataset:
     def __post_init__(self) -> None:
         keys = [(record.symbol, record.earnings_date) for record in self.records]
         if len(keys) != len(set(keys)):
-            raise ValueError("Dataset contains duplicate symbol and earnings-date rows.")
+            raise ValueError(
+                "Dataset contains duplicate symbol and earnings-date rows."
+            )
 
     @classmethod
     def build(

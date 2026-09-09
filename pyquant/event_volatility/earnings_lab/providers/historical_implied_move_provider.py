@@ -14,5 +14,4 @@ class HistoricalImpliedMoveProvider(Protocol):
         earnings_date: date,
         release_timing: EarningsReleaseTiming,
         spot: float,
-    ) -> ImpliedMove:
-        ...
+    ) -> ImpliedMove: ...

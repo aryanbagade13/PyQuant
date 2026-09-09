@@ -3,8 +3,7 @@ from datetime import date
 from pyquant.instruments.european_option import EuropeanOption
 from pyquant.market.market_state import MarketState
 from pyquant.pricing.black_scholes import black_scholes_price
-from pyquant.pricing.greeks import delta, gamma, vega, theta, rho
-
+from pyquant.pricing.greeks import delta, gamma, rho, theta, vega
 
 option = EuropeanOption(
     underlying="AAPL",
@@ -41,15 +40,9 @@ option_vega = vega(
     market=market,
 )
 
-option_theta = theta(
-    option=option,
-    market=market
-)
+option_theta = theta(option=option, market=market)
 
-option_rho = rho(
-    option=option,
-    market=market
-)
+option_rho = rho(option=option, market=market)
 
 
 print(f"Gamma: {option_gamma:.4f}")

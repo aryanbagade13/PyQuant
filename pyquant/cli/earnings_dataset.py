@@ -103,9 +103,7 @@ def build_recent_dataset(
                 implied_move_call_price=(
                     implied_move.call_mid if implied_move else None
                 ),
-                implied_move_put_price=(
-                    implied_move.put_mid if implied_move else None
-                ),
+                implied_move_put_price=(implied_move.put_mid if implied_move else None),
                 implied_move_call_timestamp=(
                     implied_move.call_observation_time.isoformat()
                     if implied_move and implied_move.call_observation_time
@@ -117,9 +115,7 @@ def build_recent_dataset(
                     else None
                 ),
                 implied_move_spot_price=implied_move_spot,
-                implied_move_source=(
-                    implied_move.source if implied_move else None
-                ),
+                implied_move_source=(implied_move.source if implied_move else None),
             )
         )
         if len(records) == max_events:
@@ -156,9 +152,7 @@ def main() -> None:
     args = parser.parse_args()
 
     symbol = args.symbol.strip().upper()
-    output = args.output or Path(
-        f"data_cache/research/{symbol.lower()}_earnings.csv"
-    )
+    output = args.output or Path(f"data_cache/research/{symbol.lower()}_earnings.csv")
     if args.release_timing and args.event_date is None:
         parser.error("--release-timing requires --event-date")
     reviewed_timing = (

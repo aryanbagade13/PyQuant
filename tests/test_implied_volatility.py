@@ -6,7 +6,6 @@ from pyquant.market.option_quote import OptionQuote
 from pyquant.pricing.black_scholes import black_scholes_price
 from pyquant.pricing.implied_volatility import implied_volatility
 
-
 option = EuropeanOption(
     underlying="AAPL",
     strike=100.0,

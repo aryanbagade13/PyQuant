@@ -2,10 +2,10 @@ from datetime import date, timedelta
 
 from pyquant.analysis.option_chain_analysis import analyse_option_chain
 from pyquant.analysis.volatility_smile import build_volatility_smile
+from pyquant.data.alpaca_provider import AlpacaProvider
 from pyquant.data.yahoo_finance_provider import YahooFinanceProvider
 from pyquant.market.market_state import MarketState
 from pyquant.visualisation.iv_smile import plot_iv_smile
-from pyquant.data.alpaca_provider import AlpacaProvider
 
 provider = YahooFinanceProvider()
 alpaca_provider = AlpacaProvider()
@@ -15,17 +15,11 @@ symbol = "AAPL"
 expiries = provider.get_expiries(symbol)
 
 if not expiries:
-    raise ValueError(
-        f"No option expiries returned for {symbol}."
-    )
+    raise ValueError(f"No option expiries returned for {symbol}.")
 
 minimum_expiry = date.today() + timedelta(days=7)
 
-valid_expiries = [
-    expiry
-    for expiry in expiries
-    if expiry >= minimum_expiry
-]
+valid_expiries = [expiry for expiry in expiries if expiry >= minimum_expiry]
 
 if not valid_expiries:
     raise ValueError(
@@ -34,62 +28,40 @@ if not valid_expiries:
 
 selected_expiry = valid_expiries[0]
 
-print(
-    f"Downloading {symbol} option chain "
-    f"for {selected_expiry}..."
-)
+print(f"Downloading {symbol} option chain for {selected_expiry}...")
 
-snapshot = alpaca_provider.get_snapshot(  #have replaced with Alpaca
+snapshot = alpaca_provider.get_snapshot(  # have replaced with Alpaca
     symbol=symbol,
     expiry=selected_expiry,
 )
 
 print(f"Spot: {snapshot.spot:.2f}")
-print(
-    f"Downloaded quotes: "
-    f"{len(snapshot.option_quotes)}"
-)
+print(f"Downloaded quotes: {len(snapshot.option_quotes)}")
 
 positive_bid_and_ask = sum(
-    1
-    for quote in snapshot.option_quotes
-    if quote.bid > 0.0 and quote.ask > 0.0
+    1 for quote in snapshot.option_quotes if quote.bid > 0.0 and quote.ask > 0.0
 )
 
 last_price_fallbacks = sum(
     1
     for quote in snapshot.option_quotes
     if (
-            not (quote.bid > 0.0 and quote.ask > 0.0)
-            and quote.last_price is not None
-            and quote.last_price > 0.0
+        not (quote.bid > 0.0 and quote.ask > 0.0)
+        and quote.last_price is not None
+        and quote.last_price > 0.0
     )
 )
 
-print(
-    f"Quotes with positive bid and ask: "
-    f"{positive_bid_and_ask}"
-)
+print(f"Quotes with positive bid and ask: {positive_bid_and_ask}")
 
-print(
-    f"Quotes using last-price fallback: "
-    f"{last_price_fallbacks}"
-)
+print(f"Quotes using last-price fallback: {last_price_fallbacks}")
 
 print("\nFirst ten downloaded quotes:")
 
 for quote in snapshot.option_quotes[:10]:
-    price_source = (
-        "midpoint"
-        if quote.bid > 0.0 and quote.ask > 0.0
-        else "last price"
-    )
+    price_source = "midpoint" if quote.bid > 0.0 and quote.ask > 0.0 else "last price"
 
-    spread_text = (
-        f"{quote.spread:.2f}"
-        if quote.spread is not None
-        else "N/A"
-    )
+    spread_text = f"{quote.spread:.2f}" if quote.spread is not None else "N/A"
 
     last_trade = (
         quote.last_trade_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -130,18 +102,12 @@ print(f"Calls: {len(analysis.calls())}")
 print(f"Puts: {len(analysis.puts())}")
 
 if not analysis.rows:
-    raise ValueError(
-        "No options were successfully analysed."
-    )
+    raise ValueError("No options were successfully analysed.")
 
 print("\nFirst analysed rows:")
 
 for row in analysis.rows[:5]:
-    spread_text = (
-        f"{row.spread:.4f}"
-        if row.spread is not None
-        else "N/A"
-    )
+    spread_text = f"{row.spread:.4f}" if row.spread is not None else "N/A"
 
     print(
         f"{row.option_type:<5} "

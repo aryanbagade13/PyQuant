@@ -55,9 +55,7 @@ def portfolio(
     position_1: Position,
     position_2: Position,
 ) -> Portfolio:
-    return Portfolio(
-        positions=[position_1, position_2]
-    )
+    return Portfolio(positions=[position_1, position_2])
 
 
 def test_portfolio_starts_empty() -> None:

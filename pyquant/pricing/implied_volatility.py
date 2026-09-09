@@ -7,16 +7,14 @@ from pyquant.pricing.greeks import vega
 
 
 def implied_volatility(
-        quote: OptionQuote,
-        market: MarketState,
-        initial_guess: float = 0.20,
-        tolerance: float = 1e-6,
-        max_iterations: int = 100,
+    quote: OptionQuote,
+    market: MarketState,
+    initial_guess: float = 0.20,
+    tolerance: float = 1e-6,
+    max_iterations: int = 100,
 ) -> float:
     if initial_guess <= 0.0:
-        raise ValueError(
-            "Initial volatility guess must be positive."
-        )
+        raise ValueError("Initial volatility guess must be positive.")
 
     volatility_guess = initial_guess
 
@@ -42,18 +40,11 @@ def implied_volatility(
         )
 
         if abs(option_vega) < 1e-12:
-            raise ValueError(
-                "Vega is too small to calculate implied volatility."
-            )
+            raise ValueError("Vega is too small to calculate implied volatility.")
 
-        volatility_guess = (
-            volatility_guess
-            - pricing_error / option_vega
-        )
+        volatility_guess = volatility_guess - pricing_error / option_vega
 
         if volatility_guess <= 0.0:
             volatility_guess = 1e-6
 
-    raise ValueError(
-        "Implied volatility calculation did not converge."
-    )
+    raise ValueError("Implied volatility calculation did not converge.")
