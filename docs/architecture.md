@@ -1,61 +1,72 @@
-# Architecture
+# Research architecture
 
-## Earnings research flow
-
-```text
-Alpha Vantage                    Nasdaq / reviewed override
-quarterly EPS reports            release timing
-          │                              │
-          └──────────────┬───────────────┘
-                         ▼
-                 earnings event date
-                         │
-          ┌──────────────┴───────────────┐
-          ▼                              ▼
-Yahoo Finance                       Alpaca
-adjusted and raw closes             expired option contracts + minute bars
-          │                              │
-          ▼                              ▼
-realised return                  pre-cutoff ATM straddle
-          │                              │
-          └──────────────┬───────────────┘
-                         ▼
-             HistoricalEarningsRecord
-                         │
-                         ▼
-               auditable research CSV
-```
-
-## Design boundaries
-
-Provider protocols isolate external services from the research models. Tests
-use small in-memory providers, allowing calculations and date-selection rules
-to run without credentials or network access.
-
-`HistoricalEarningsRecord` is the stable output boundary. It stores derived
-metrics alongside the contract symbols, timestamps, strike, expiry, prices,
-and source needed to audit an implied-move observation.
-
-The command-line layer coordinates providers but does not contain pricing
-maths. The Streamlit UI is another consumer of the same underlying packages.
-
-## Look-ahead controls
-
-- Before-open announcements use the preceding trading session.
-- After-close announcements use the release-day close.
-- Unknown and during-market-hours timings are rejected.
-- Option bars after 3:55 p.m. New York time are excluded.
-- Option bars more than 60 minutes old at the cutoff are rejected.
-- Raw spot is used with option strikes; adjusted closes are used for returns.
-
-## Data quality
-
-The current implied move is:
+## Data flow
 
 ```text
-(ATM call bar close + ATM put bar close) / raw underlying close
+Alpha Vantage earnings -+
+                        +-> reviewed event and release timing
+Nasdaq timing ----------+                 |
+                                          +-> Yahoo adjusted closes -> realised move
+                                          |
+                                          +-> Alpaca raw stock/option bars
+                                                        |
+                                                        v
+                                              implied move / variance
+                                                        |
+                                                        v
+                                               auditable CSV record
 ```
 
-It is a transparent approximation. A stronger estimate will compare total
-variance in expiries immediately before and after the announcement, reducing
-the ordinary non-event variance included in the straddle.
+External services sit behind small provider interfaces. The calculation and
+date-selection tests therefore use in-memory providers and do not require API
+keys. Separate live examples check the real integrations.
+
+## Decisions that matter
+
+### Release timing
+
+Before-open events use the previous session's close and the release-day close.
+After-close events use the release-day close and the following session's close.
+Unknown and during-market-hours events are rejected rather than guessed.
+
+### Point-in-time option inputs
+
+The default observation is 3:55 p.m. New York time, ten valid trading sessions
+before the event. Both expiries are observed at that cutoff. Bars after the
+cutoff or more than 60 minutes old are rejected.
+
+### Raw and adjusted prices
+
+Option strikes are compared with a contemporaneous raw share price. Realised
+returns use adjusted closes so that a corporate action is not mistaken for an
+earnings reaction.
+
+### Earnings variance
+
+The short expiry ends before the announcement; the long expiry contains it.
+ATM call and put bar closes are inverted to IV and averaged within each expiry.
+The short-expiry IV is the current proxy for ordinary volatility:
+
+```text
+short total variance = short IV^2 * short time
+long total variance  = long IV^2 * long time
+ordinary gap variance = short IV^2 * (long time - short time)
+
+raw earnings variance = long total variance
+                        - short total variance
+                        - ordinary gap variance
+```
+
+A negative raw result is retained but the reported implied move uses a zero
+floor. The calculation is intentionally simple enough to inspect; it does not
+claim to recover a uniquely identifiable event variance.
+
+## Boundaries
+
+`HistoricalEarningsRecord` is the dataset row produced by the first workflow.
+`HistoricalEarningsVarianceEstimate` stores the richer two-expiry observation,
+including contracts, timestamps, prices, rates, IVs, and source labels.
+
+The command-line workflow is the supported research entry point. The Streamlit
+dashboard remains an experimental viewer for current option chains and is not
+used to produce the historical result.
